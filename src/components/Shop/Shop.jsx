@@ -7,11 +7,27 @@ import {
 import Cart from "../Cart/Cart";
 import Product from "../Product/Product";
 import "./Shop.css";
-import { Link } from "react-router-dom";
+import { Link, useAsyncError, useLoaderData } from "react-router-dom";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
+
+  // Pagination Code here
+  const [currentPage, setCurrentPage] = useState(0);
+  const { totalProduct } = useLoaderData();
+  const [itemPerPage, setItemPerPage] = useState(10);
+  const totalPage = Math.ceil(totalProduct / itemPerPage);
+
+  // Create button dinamic
+  // const pageNumber = [];
+  // for (let i = 0; i <= totalPage; i++) {
+  //   pageNumber.push(i);
+  // }
+
+  // second way to create dinamic
+  const options = [5, 10, 20];
+  const pageNumber = [...Array(totalPage).keys()];
 
   useEffect(() => {
     fetch("http://localhost:5000/products")
@@ -64,25 +80,49 @@ const Shop = () => {
     deleteShoppingCart();
   };
 
+  const handelSelectChange = (event) => {
+    setItemPerPage(parseInt(event.target.value));
+    setCurrentPage(0);
+  };
+
   return (
-    <div className="shop-container">
-      <div className="products-container">
-        {products.map((product) => (
-          <Product
-            key={product._id}
-            product={product}
-            handleAddToCart={handleAddToCart}
-          ></Product>
+    <>
+      <div className="shop-container">
+        <div className="products-container">
+          {products.map((product) => (
+            <Product
+              key={product._id}
+              product={product}
+              handleAddToCart={handleAddToCart}
+            ></Product>
+          ))}
+        </div>
+        <div className="cart-container">
+          <Cart cart={cart} handleClearCart={handleClearCart}>
+            <Link className="proceed-link" to="/orders">
+              <button className="btn-proceed">Review Order</button>
+            </Link>
+          </Cart>
+        </div>
+      </div>
+
+      {/* Paginatino */}
+      <div className="pagination">
+        {pageNumber.map((number) => (
+          <button key={number} onClick={() => setCurrentPage(number)}>
+            {number}
+          </button>
         ))}
+
+        <select value={itemPerPage} onChange={handelSelectChange}>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
       </div>
-      <div className="cart-container">
-        <Cart cart={cart} handleClearCart={handleClearCart}>
-          <Link className="proceed-link" to="/orders">
-            <button className="btn-proceed">Review Order</button>
-          </Link>
-        </Cart>
-      </div>
-    </div>
+    </>
   );
 };
 
